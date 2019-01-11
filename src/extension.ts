@@ -4,7 +4,13 @@ import * as vscode from 'vscode';
 
 function completeCommandRegex(commandName:string)
 {
-	var re = new RegExp( ""+commandName+"\\{([\\w\\d,:]*)\\}" , "g");		
+	var re = new RegExp( "\\\\"+commandName+"\\{([\\w\\d,./:\\s]*)\\}" , "g");		
+	return re;
+}
+
+function parameterlessCommandRegex(commandName:string)
+{
+	var re = new RegExp( "\\\\" +commandName , "g");		
 	return re;
 }
 
@@ -17,19 +23,31 @@ function completeOptionalParameterRegex()
 function cleanup(toModify:string) {	
 	let result = toModify.replace(completeOptionalParameterRegex(),"");
 
-	let dropList = [ "cite" ,"autoref" , "label" , "chapter"];
-	for (let entry of dropList) {
-		let regEx = completeCommandRegex(entry);
-		result = result.replace(regEx,"");
-	}
-
 	let keepContentList = [ "ac" ,"paragraph", "section" , "subsection", "gls" , "acp", "caption"];
 	for (let entry of keepContentList) {
 		let regEx = completeCommandRegex(entry);
 		result = result.replace(regEx,"$1");
 	}	
+	
 
-	return result.replace("()","");
+	let dropList = [ "cite" ,"autoref" , "label" , "chapter" ,"centering" , "begin", "end" , "includegraphics" , "ref"];
+	for (let entry of dropList) {
+		let regEx = completeCommandRegex(entry);
+		result = result.replace(regEx,"");
+	}
+
+	let removeCommandList = [ "centering" ];
+	for (let entry of removeCommandList) {
+		let regEx = parameterlessCommandRegex(entry);
+		result = result.replace(regEx,"");
+	}
+	
+	// todo: drop all unkwn command
+
+
+	
+	var emptyBraces = /\([\s]*\)/g;
+	return result.replace(emptyBraces,"");
 }
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
